@@ -42,6 +42,7 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileFilter;
@@ -79,38 +80,20 @@ public class SnesSystem implements Hardware
 			{
 				public void actionPerformed(ActionEvent evt)
 				{
-					// choose a rom file
-					File romFile = null;
-					JFileChooser fileChooser = new JFileChooser();
-					fileChooser.setDialogTitle("Open ROM");
-					fileChooser.setFileFilter(new FileFilter()
-					{
-						@Override
-						public boolean accept(File f)
-						{
-							return f.isDirectory() || f.getName().endsWith(".smc") || f.getName().endsWith(".sfc");
-						}
-
-						@Override
-						public String getDescription()
-						{
-							return "ROM files (.smc, .sfc)";
-						}
-					});
-					int returnVal = fileChooser.showOpenDialog(null);
-					if (returnVal == JFileChooser.APPROVE_OPTION)
-					{
-						romFile = fileChooser.getSelectedFile();
-						LoadCartridge(romFile.getAbsolutePath());
-					}
-					else
-					{
-						return;
-					}
+					openRomFile();
 				}
 			});
 			fileMenu.add(loadRom);
 
+			JMenuItem loadCustomState = new JMenuItem("Load Custom Save State");
+			loadCustomState.addActionListener(new ActionListener()
+			{
+				public void actionPerformed(ActionEvent evt)
+				{
+					openLoadState();
+				}
+			});
+			fileMenu.add(loadCustomState);
 			
 			JMenuItem loadLastSave = new JMenuItem("Load last save");
 			loadLastSave.addActionListener(new ActionListener() {
@@ -135,6 +118,8 @@ public class SnesSystem implements Hardware
 			});
 			fileMenu.add(saveGame);
 			
+			
+			
 			JMenuItem exit = new JMenuItem("Exit");
 			exit.addActionListener(new ActionListener()
 			{
@@ -148,6 +133,78 @@ public class SnesSystem implements Hardware
 			fileMenu.add(exit);
 
 			return fileMenu;
+		}
+		
+		public void openRomFile()
+		{
+			// choose a rom file
+			File romFile = null;
+			JFileChooser fileChooser = new JFileChooser();
+			fileChooser.setDialogTitle("Open ROM");
+			fileChooser.setFileFilter(new FileFilter()
+			{
+				@Override
+				public boolean accept(File f)
+				{
+					return f.isDirectory() || f.getName().endsWith(".smc") || f.getName().endsWith(".sfc");
+				}
+
+				@Override
+				public String getDescription()
+				{
+					return "ROM files (.smc, .sfc)";
+				}
+			});
+			int returnVal = fileChooser.showOpenDialog(null);
+			if (returnVal == JFileChooser.APPROVE_OPTION)
+			{
+				romFile = fileChooser.getSelectedFile();
+				LoadCartridge(romFile.getAbsolutePath());
+			}
+			else
+			{
+				return;
+			}
+		}
+		
+		public void openLoadState()
+		{
+			// choose a rom file
+			File saveStateFile = null;
+			JFileChooser fileChooser = new JFileChooser();
+			fileChooser.setDialogTitle("Open ROM");
+			fileChooser.setFileFilter(new FileFilter()
+			{
+				@Override
+				public boolean accept(File f)
+				{
+					String filename = f.getName();
+					System.out.println("Filename=" + filename);
+					String extension = "";
+					if( !f.isDirectory() )
+						extension = filename.substring(filename.lastIndexOf("."));
+					
+					return f.isDirectory() || (extension.lastIndexOf(".j") == 0);
+				}
+
+				@Override
+				public String getDescription()
+				{
+					return "Save Game State files (.j###)";
+				}
+			});
+			int returnVal = fileChooser.showOpenDialog(null);
+			if (returnVal == JFileChooser.APPROVE_OPTION)
+			{
+				saveStateFile = fileChooser.getSelectedFile();
+				String filepath = saveStateFile.getAbsolutePath();
+				String filename = saveStateFile.getName();
+				loadstate(filepath.substring(0,filepath.lastIndexOf(filename)), filename);
+			}
+			else
+			{
+				return;
+			}
 		}
 
 		private JMenu makeSettingsMenu()
@@ -180,8 +237,8 @@ public class SnesSystem implements Hardware
 			});
 			settingsMenu.add(videoToggle);
 
-			JCheckBoxMenuItem fps30 = new JCheckBoxMenuItem("60fps");
-			fps30.setState((Integer) ((Configurable) console).readConfig("fps") == 60);
+			JCheckBoxMenuItem fps30 = new JCheckBoxMenuItem("No Limit FPS");
+			fps30.setState((Integer) ((Configurable) console).readConfig("fps") > 60);
 			fps30.addActionListener(new ActionListener()
 			{
 				public void actionPerformed(ActionEvent evt)
@@ -189,8 +246,10 @@ public class SnesSystem implements Hardware
 					JCheckBoxMenuItem i = (JCheckBoxMenuItem) evt.getSource();
 					if (i.isSelected())
 					{
-						((Configurable) console).writeConfig("fps", 60);
-						((Configurable) audio).writeConfig("samplerate", 16160);
+						((Configurable) console).writeConfig("fps", 10000);
+						((Configurable) audio).writeConfig("samplerate", 33334);
+						
+						
 					}
 					else
 					{
@@ -314,7 +373,7 @@ public class SnesSystem implements Hardware
 	public SnesSystem()
 	{
 		LoadConsole();
-		LoadCartridge("C:\\Users\\Joel\\Documents\\JavaProjects\\roms\\Super Metroid (E) [!].smc");
+		LoadCartridge("C:\\Users\\Joel\\Documents\\JavaProjects\\roms\\Super Mario World (USA).smc");
 	}
 	
 	public void LoadConsole()
@@ -398,6 +457,16 @@ public class SnesSystem implements Hardware
 		
 	}
 	
+	public void createSettingsPane()
+	{
+		JFrame f = new JFrame();
+		JPanel p = new JPanel();
+		
+	}
+	
+	public static String SAVE_STATE_PATH="save\\";
+	public static String SAVE_GAME_PATH="save\\";
+	
 	public void freeze()
 	{
 		((Configurable) console).writeConfig("done",  true);
@@ -405,7 +474,7 @@ public class SnesSystem implements Hardware
 		try
 		{
 			System.out.println("Deserialize Sleep Begin");
-			Thread.sleep(2000);
+			Thread.sleep(500);
 			System.out.println("Deserialize Sleep End");
 		}
 		catch(Exception e)
@@ -424,33 +493,29 @@ public class SnesSystem implements Hardware
 		Configurable c = ((Configurable) console);
 		Bus8bit membus = (Bus8bit)c.readConfig("memory");
 		
-		//((Configurable) cartridge).writeConfig("save", true);
+	
+		String filepath = SAVE_STATE_PATH;
+		String filenameNoExt = removeExtension(CARTNAME);
+		int nextExtension = getNextExtension(filepath, filenameNoExt, "j");
+		String filename = filenameNoExt + ".j" + nextExtension;
+		String tempFile = filename + ".temp";
 		
-		byte[] savedmemory = new byte[0xFFFFFF];
-		
-		String filepath = "C:\\Users\\Joel\\Documents\\JavaProjects\\roms\\save\\";
-		String filename = "savestate.ser";
 		try
 		{
-			FileOutputStream fileOut = new FileOutputStream(filepath + filename);
+			FileOutputStream fileOut = new FileOutputStream(filepath + tempFile);
 			ObjectOutputStream out = new ObjectOutputStream(fileOut);
 			
-			
-			
 			c.writeConfig("save", out);
-			
-			for(int i=0;i<0xFFFFFF; i++)
-			{
-				//savedmemory[i] = membus.read8bit(i);
-				//out.writeByte(savedmemory[i]);
-			}
-			
+	
 			out.close();
 			fileOut.close();
 			
-			compressGzipFile(filepath + filename, filepath + filename + ".gzip");
+			compressGzipFile(filepath + tempFile, filepath + filename);
 			
-			System.out.printf("Serialized SNES memory is saved in /save/savestate.ser.gzip");
+			System.out.printf("Serialized SNES memory is saved in " + filepath + filename);
+			
+			File file = new File(filepath + tempFile);
+			file.delete();
 		}
 		catch(Exception e)
 		{
@@ -458,6 +523,84 @@ public class SnesSystem implements Hardware
 		}
 	}
 	
+	/*
+	 * Used for numbering an extension from j0 to jN, where N can be infinite.
+	 * Marker is what comes before the number, for example, .j1, the marker would be "j"
+	 */
+	public int getNextExtension(String filepath, String cartname, String marker)
+	{
+		File folder = new File(filepath);
+		
+		int lowest = -1;
+		System.out.println("Filepath = " + filepath);
+	    for (final File fileEntry : folder.listFiles()) {
+	    	String filename = fileEntry.getName();
+	    	String ex = filename.substring(filename.lastIndexOf('.')+1).toLowerCase();
+	    	if( ex.indexOf(marker) == 0 )
+	    	{
+	    		String szNum = ex.substring(marker.length());
+	    		try
+	    		{
+	    			int number = Integer.parseInt(szNum);
+	    			if( number > lowest )
+	    				lowest = number;
+	    		}
+	    		catch(Exception e) {}
+	    	}
+	    }
+		
+	    lowest++;
+	    return lowest;
+	}
+	
+	public static String getAppPath() {
+		try	{ return new File(".").getCanonicalPath(); }
+		catch(Exception e) {}
+		return "";
+	}
+	
+	public String removeExtension(String filepath)
+	{
+		return filepath.substring(0, filepath.lastIndexOf("."));
+	}
+	
+	public void loadstate()
+	{
+		String filepath = SAVE_STATE_PATH;
+		String filenameNoExt = removeExtension(CARTNAME);
+		int nextExtension = getNextExtension(filepath, filenameNoExt, "j") - 1;
+		String filename = filenameNoExt + ".j" + nextExtension;
+		
+	    loadstate(filepath, filename); 
+	}
+	
+	public void loadstate(String filepath, String filename)
+	{
+		Configurable c = ((Configurable) console);
+		
+		String tempFile = filename + ".temp";
+		System.out.println("Loading Save State: " + filename);
+		try
+		{
+			decompressGzipFile( filepath + filename, filepath + tempFile);
+			
+			FileInputStream fileIn = new FileInputStream(filepath + tempFile);
+			ObjectInputStream in = new ObjectInputStream(fileIn);
+			
+			c.writeConfig("load", in);
+			
+			in.close();
+			fileIn.close();
+		
+			File file = new File(filepath + tempFile);
+			file.delete();
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+
 	private static void compressGzipFile(String file, String gzipFile) {
         try {
             FileInputStream fis = new FileInputStream(file);
@@ -497,151 +640,6 @@ public class SnesSystem implements Hardware
          
     }
 	
-	public void loadstate()
-	{
-		Configurable c = ((Configurable) console);
-		Bus8bit membus = (Bus8bit)c.readConfig("memory");
-		
-		byte[] savedmemory = new byte[0xFFFFFF];
-		
-		//((Configurable) cartridge).writeConfig("load", true);;
-		String filepath = "C:\\Users\\Joel\\Documents\\JavaProjects\\roms\\save\\";
-		String filename = "savestate.ser";
-		try
-		{
-			decompressGzipFile( filepath + filename + ".gzip", filepath + filename);
-			
-			FileInputStream fileIn = new FileInputStream(filepath + filename);
-			ObjectInputStream in = new ObjectInputStream(fileIn);
-			
-			c.writeConfig("load", in);
-			
-			for(int i=0;i<0xFFFFFF; i++)
-			{
-				//savedmemory[i] = in.readByte();
-				//membus.write8bit(i, savedmemory[i]);
-			}
-			
-			System.out.println("Read " + 0xFFFFFF + " bytes.");
-			in.close();
-			fileIn.close();
-		
-			File file = new File(filepath + filename);
-			file.delete();
-			//((Configurable) cartridge).writeConfig("load",true);
-			
-			//console.connect(4, audio);
-			//console.connect(0, controller1);
-			//console.connect(1, controller2);
-		}
-		catch(Exception e)
-		{
-			e.printStackTrace();
-		}
-	         
-	}
-
-
-	public void serialize()
-	{
-		try
-		{
-			Configurable c = ((Configurable) console);
-			
-			c.writeConfig("done",  true);
-			
-			System.out.println("Deserialize Sleep Begin");
-			Thread.sleep(1000);
-			System.out.println("Deserialize Sleep End");
-			FileOutputStream fileOut = new FileOutputStream("C:\\Users\\Joel\\Documents\\JavaProjects\\roms\\save\\gamestate.ser");
-			ObjectOutputStream out = new ObjectOutputStream(fileOut);
-	
-			out.writeObject(cartridge);
-			out.writeObject(video);
-			out.writeObject(audio);
-			out.writeObject(console);
-			
-			//c.writeConfig("freeze", false);
-			((Clockable) console).clock(1L);
-			out.close();
-			fileOut.close();
-			System.out.printf("Serialized data is saved in /save/gamestate.ser");
-		}
-		catch(IOException i)
-		{
-			i.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
-	}
-	
-	public void deserialize()
-	{
-		try
-	      {
-	         FileInputStream fileIn = new FileInputStream("C:\\Users\\Joel\\Documents\\JavaProjects\\roms\\save\\gamestate.ser");
-	         ObjectInputStream in = new ObjectInputStream(fileIn);
-	         
-	        
-	         
-	         Configurable c = ((Configurable) console);
-	         c.writeConfig("done",  true);
-				
-	         System.out.println("Deserialize Sleep Begin");
-	         Thread.sleep(1000);
-	         System.out.println("Deserialize Sleep End");
-	         
-	         destroy();
-	         //Configurable c = ((Configurable) console);
-	         //c.writeConfig("freeze",  true);
-			 //while(!(Boolean)c.readConfig("frozen"));
-				
-	         //console.reset();
-	 		 //cartridge.reset();
-	         cartridge = (Hardware) in.readObject();
-	         video = (Hardware) in.readObject();
-	         audio = (Hardware) in.readObject();
-	         console = (Hardware) in.readObject();
-	         //c = ((Configurable) console);
-	         
-	         //((Configurable) cartridge).writeConfig("romfile", "C:\\Users\\Joel\\Documents\\JavaProjects\\roms\\Super Mario World (USA).smc");
-	 		 //console.connect(2, cartridge);
-	         ((Configurable) video).writeConfig("window", window);
-	         
-	         console.connect(5, cartridge);
-	         console.connect(3, video);
-	 		 console.connect(4, audio);
-	 		 
-	 		 console.connect(0, controller1);
-	 		 console.connect(1, controller2);
-	         //console.connect(2, cartridge);
-	 		 
-	 		 
-	 		 
-	 		 
-	 		 
-	 		 ((Clockable) console).clock(1L); // starts cpu thread
-	 		 //c.writeConfig("freeze", false);
-	 		
-	 		
-	         in.close();
-	         fileIn.close();
-	      }catch(IOException i)
-	      {
-	         i.printStackTrace();
-	         return;
-	      }catch(ClassNotFoundException c)
-	      {
-	         System.out.println("Employee class not found");
-	         c.printStackTrace();
-	         return;
-	      } catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
 	@Override
 	public void connect(int port, Hardware hw)
 	{
@@ -652,8 +650,19 @@ public class SnesSystem implements Hardware
 	{
 	}
 
+	public static String CARTNAME="";
+	
 	private void LoadCartridge(String cartridgeName)
 	{
+		CARTNAME = cartridgeName;
+		
+		int lastSlash = cartridgeName.lastIndexOf("\\");
+		CARTNAME = cartridgeName.substring(lastSlash+1, cartridgeName.length());
+		SAVE_STATE_PATH = cartridgeName.substring(0, lastSlash) + "\\save\\";
+		
+		System.out.println("Save State Path = " + SAVE_STATE_PATH);
+		System.out.println("Cart Name = " + CARTNAME);
+		
 		console.reset();
 		cartridge.reset();
 		((Configurable) cartridge).writeConfig("romfile", cartridgeName);

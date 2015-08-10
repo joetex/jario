@@ -2,7 +2,6 @@
 <classpath>
 	<classpathentry kind="src" output="bin" path="Snes"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="C:/Users/Joel/Documents/JavaProjects/opengl/jogl-all.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Joel/Documents/JavaProjects/lwjgl-2/jar/lwjgl.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/OpenGL"/>
 	<classpathentry kind="output" path="Snes"/>
 </classpath>

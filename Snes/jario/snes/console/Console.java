@@ -301,10 +301,14 @@ public class Console implements Hardware, Clockable, Configurable, java.io.Seria
 		if (key.equals("enablevideo")) 
 		{
 			enablevideo = (Boolean) value;
+			((Configurable) cpu).writeConfig("enable", value);
 			((Configurable) video).writeConfig("enable", value);
 		}
 		else if (key.equals("done")) done = (Boolean) value;
-		else if (key.equals("enableaudio")) ((Configurable) dsp).writeConfig("enableaudio", value);
+		else if (key.equals("enableaudio")) {
+			((Configurable) dsp).writeConfig(key, value);
+			((Configurable) cpu).writeConfig(key, value);
+		}
 		else if (key.equals("accuracy")) ((Configurable) ppu).writeConfig("accuracy", value);
 		else if (key.equals("fps")) ((Configurable) video).writeConfig("fps", value);
 		else if (key.equals("ppucache")) ((Configurable) ppu).writeConfig("cache", value);

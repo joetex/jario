@@ -83,6 +83,8 @@ public class VideoPlayer implements Hardware, BusDMA, Configurable, java.io.Seri
 			}
 	
 			graphics.drawImage(bufferedImage, 0, 0, 512, 448, 0, 0, width, height, null);
+			
+			//updateFPS();
 		}
 		
 	}

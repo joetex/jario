@@ -18,7 +18,9 @@ import jario.hardware.Bus8bit;
 import jario.hardware.Clockable;
 import jario.hardware.Configurable;
 import jario.hardware.Hardware;
+import jario.snes.accessories.VideoPlayer;
 import jario.snes.performance.cpu.PriorityQueue.Callback;
+import jario.snes.video.Video;
 
 public class CPU extends CPUCore implements Hardware, Clockable, Bus1bit, Bus8bit, Configurable, java.io.Serializable
 {
@@ -55,6 +57,7 @@ public class CPU extends CPUCore implements Hardware, Clockable, Bus1bit, Bus8bi
 	transient HVCounter counter = new HVCounter();
 
 	private boolean enableppu = true;
+	private boolean enableaudio = true;
 	
 	public long clockcnt = 0;
 	private boolean freeze = false;
@@ -612,7 +615,10 @@ public class CPU extends CPUCore implements Hardware, Clockable, Bus1bit, Bus8bi
 			((Configurable) cpu).writeConfig(key, value);
 		}
 		else if (key.equals("region")) region = counter.region = value.toString().equals("ntsc") ? NTSC : PAL;
-
+		else if (key.equals("enableaudio"))
+		{
+			enableaudio = (Boolean) value;
+		}
 		else if(key.equals("save")) {
 			ObjectOutputStream out = (ObjectOutputStream)value;
 			
@@ -718,20 +724,9 @@ public class CPU extends CPUCore implements Hardware, Clockable, Bus1bit, Bus8bi
 	protected void step(int clocks)
 	{
 		smp_clock += clocks;
-		try
-		{
+		if( enableppu )
 			ppu.clock(clocks);
-		}
-		catch(Exception e)
-		{
-			if( ppu == null )
-			{
-				
-				ppu = (Clockable)jario.snes.performance.ppu.PPU.ppu;
-				ppu.clock(clocks);
-				System.out.println("PPU = NULL ??!?!");
-			}
-		}
+		
 		if (coprocessors != null)
 		{
 			coprocessors.clock(clocks);
@@ -740,8 +735,12 @@ public class CPU extends CPUCore implements Hardware, Clockable, Bus1bit, Bus8bi
 
 	private void synchronize_smp()
 	{
-		smp.clock(smp_clock);
-		smp_clock = 0;
+		if( enableaudio )
+		{
+			smp.clock(smp_clock);
+			smp_clock = 0;
+		}
+		
 	}
 	
 	private void synchronize_coprocessor()
@@ -886,12 +885,20 @@ public class CPU extends CPUCore implements Hardware, Clockable, Bus1bit, Bus8bi
 			synchronize_smp();
 			// synchronize_ppu();
 			synchronize_coprocessor();
-			video.write32bit(0, counter.vcounter());
+			
+			if( enableppu )
+				video.write32bit(0, counter.vcounter());
+			
 			if (counter.vcounter() == 241)
 			{
 				((Clockable) input_port).clock(0L);
-				((Clockable) video).clock(0L);
+				if( enableppu )
+					((Clockable) video).clock(0L);
+				((VideoPlayer)((Video) video).output).updateFPS();
 			}
+		
+			
+			
 
 			if (counter.vcounter() == 0)
 			{
@@ -912,6 +919,7 @@ public class CPU extends CPUCore implements Hardware, Clockable, Bus1bit, Bus8bi
 			// }
 
 			boolean nmi_valid = status.nmi_valid;
+		
 			status.nmi_valid = counter.vcounter() >= (!ppu1bit.read1bit(1) ? 225 : 240);
 
 			if (!nmi_valid && status.nmi_valid)
@@ -927,6 +935,7 @@ public class CPU extends CPUCore implements Hardware, Clockable, Bus1bit, Bus8bi
 				status.nmi_line = false;
 			}
 
+			
 			if (status.auto_joypad_poll_enabled && counter.vcounter() == (!ppu1bit.read1bit(1) ? 227 : 242))
 			{
 				input_port.write8bit(1, (byte) 0); // poll

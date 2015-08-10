@@ -28,7 +28,7 @@ public class Video implements Hardware, Clockable, Bus32bit, Configurable, java.
 	private int FRAMES_PER_SECOND = 60;
 	private int SKIP_TICKS = 1000 / FRAMES_PER_SECOND;
 
-	private transient BusDMA output;
+	public transient BusDMA output;
 	private transient BusDMA ppuDma;
 	private transient Bus1bit ppu1bit;
 	private transient Bus32bit audio;
@@ -171,7 +171,7 @@ public class Video implements Hardware, Clockable, Bus32bit, Configurable, java.
 			frame_interlace = false;
 		}
 
-		((VideoPlayer)output).updateFPS();
+		//((VideoPlayer)output).updateFPS();
 		
 		currentTime = System.currentTimeMillis();
 
@@ -233,6 +233,9 @@ public class Video implements Hardware, Clockable, Bus32bit, Configurable, java.
 		{
 			FRAMES_PER_SECOND = (Integer) value;
 			SKIP_TICKS = 1000 / FRAMES_PER_SECOND;
+			
+			limit = (FRAMES_PER_SECOND <= 60);
+			
 		}
 	}
 
