@@ -1442,8 +1442,8 @@ public class PPU implements Hardware, Clockable, Bus1bit, Bus8bit, BusDMA, Confi
 				out.writeObject(bg2);
 				out.writeObject(bg3);
 				out.writeObject(bg4);
-				//out.writeObject(sprite);
-				//out.writeObject(screen);
+				out.writeObject(sprite);
+				out.writeObject(screen);
 				//out.writeObject(display);
 				out.writeObject(regs);
 				
@@ -1475,11 +1475,11 @@ public class PPU implements Hardware, Clockable, Bus1bit, Bus8bit, BusDMA, Confi
 		        	out.writeByte(buff[i]);
 		        }
 			       */
-		       // out.writeObject(cpuCounter.status);
-		       // out.writeInt(cpuCounter.region);
+		        //out.writeObject(cpuCounter.status);
+		        //out.writeInt(cpuCounter.region);
 		        
-		        //out.writeObject(ppuCounter.status);
-		        //out.writeInt(ppuCounter.region);
+		       // out.writeObject(ppuCounter.status);
+		       // out.writeInt(ppuCounter.region);
 		     
 			}
 			catch(Exception e) { e.printStackTrace(); }
@@ -1496,8 +1496,8 @@ public class PPU implements Hardware, Clockable, Bus1bit, Bus8bit, BusDMA, Confi
 		        bg2 = (Background)in.readObject();
 		        bg3 = (Background)in.readObject();
 		        bg4 = (Background)in.readObject();
-		        //sprite = (Sprite)in.readObject();
-		        //screen = (Screen)in.readObject();
+		        sprite = (Sprite)in.readObject();
+		        screen = (Screen)in.readObject();
 		        //display = (Display)in.readObject();
 		        regs = (Regs)in.readObject();
 		        
@@ -1542,7 +1542,7 @@ public class PPU implements Hardware, Clockable, Bus1bit, Bus8bit, BusDMA, Confi
 		        //cpuCounter.status = (HVCounter.Status)in.readObject();
 		        //cpuCounter.region = in.readInt();
 		        
-		       // ppuCounter.status = (HVCounter.Status)in.readObject();
+		        //ppuCounter.status = (HVCounter.Status)in.readObject();
 		        //ppuCounter.region = in.readInt();
 		        
 			}

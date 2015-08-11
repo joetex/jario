@@ -29,9 +29,12 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Queue;
 import java.util.ServiceLoader;
+import java.util.prefs.Preferences;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -68,7 +71,70 @@ public class SnesSystem implements Hardware
 			add(makeController1Menu());
 			add(makeController2Menu());
 			add(makeSettingsMenu());
+			add(makeRecordMenu());
 		}
+
+		private JMenu makeRecordMenu() {
+			// TODO Auto-generated method stub
+			JMenu recordMenu = new JMenu();
+			recordMenu.setText("Recorder");
+			
+			JMenuItem menuStartRecord = new JMenuItem("Start Recording");
+			menuStartRecord.addActionListener(new ActionListener()
+			{
+				public void actionPerformed(ActionEvent evt)
+				{
+					freeze();
+					startRecording("r");
+					unfreeze();
+				}
+			});
+			recordMenu.add(menuStartRecord);
+			
+			
+			JMenuItem menuStopRecord = new JMenuItem("Stop Recording");
+			menuStopRecord.addActionListener(new ActionListener()
+			{
+				public void actionPerformed(ActionEvent evt)
+				{
+					freeze();
+					stopRecording();
+					unfreeze();
+				}
+
+				
+			});
+			recordMenu.add(menuStopRecord);
+			
+			JMenuItem menuLoadRecord = new JMenuItem("Load Recording");
+			menuLoadRecord.addActionListener(new ActionListener()
+			{
+				public void actionPerformed(ActionEvent evt)
+				{
+					freeze();
+					loadrecording();
+					unfreeze();
+				}
+			});
+			recordMenu.add(menuLoadRecord);
+			
+			JMenuItem menuLoadLastRecord = new JMenuItem("Load Last Recording");
+			menuLoadLastRecord.addActionListener(new ActionListener()
+			{
+				public void actionPerformed(ActionEvent evt)
+				{
+					freeze();
+					loadrecording();
+					unfreeze();
+				}
+				
+			});
+			recordMenu.add(menuLoadLastRecord);
+			
+			return recordMenu;
+		}
+		
+		
 
 		private JMenu makeFileMenu()
 		{
@@ -167,19 +233,22 @@ public class SnesSystem implements Hardware
 			}
 		}
 		
+		public String LAST_SAVE_STATE_FOLDER="";
+		
 		public void openLoadState()
 		{
 			// choose a rom file
 			File saveStateFile = null;
-			JFileChooser fileChooser = new JFileChooser();
+			JFileChooser fileChooser = new JFileChooser(LAST_SAVE_STATE_FOLDER);
 			fileChooser.setDialogTitle("Open ROM");
+			
 			fileChooser.setFileFilter(new FileFilter()
 			{
 				@Override
 				public boolean accept(File f)
 				{
 					String filename = f.getName();
-					System.out.println("Filename=" + filename);
+					//System.out.println("Filename=" + filename);
 					String extension = "";
 					if( !f.isDirectory() )
 						extension = filename.substring(filename.lastIndexOf("."));
@@ -196,10 +265,16 @@ public class SnesSystem implements Hardware
 			int returnVal = fileChooser.showOpenDialog(null);
 			if (returnVal == JFileChooser.APPROVE_OPTION)
 			{
+				
 				saveStateFile = fileChooser.getSelectedFile();
 				String filepath = saveStateFile.getAbsolutePath();
 				String filename = saveStateFile.getName();
-				loadstate(filepath.substring(0,filepath.lastIndexOf(filename)), filename);
+				filepath = filepath.substring(0,filepath.lastIndexOf(filename));
+				LAST_SAVE_STATE_FOLDER = filepath;
+				
+				freeze();
+				loadstate(filepath, filename);
+				unfreeze();
 			}
 			else
 			{
@@ -488,16 +563,171 @@ public class SnesSystem implements Hardware
 		
 		((Clockable) console).clock(1L);
 	}
+	
+	public static FileOutputStream FILE_RECORDING = null;
+	public static ObjectOutputStream OBJECT_RECORDING = null;
+	public static String RECORDING_PATH = null;
+	public static String RECORDING_FILENAME = null;
+	public static String RECORDING_TEMPNAME = null;
+	
+	private void startRecording(String marker) {
+		
+		if( FILE_RECORDING != null )
+		{
+			//TODO Output warning message that we are already recording
+			return;
+		}
+		
+		((Configurable)controller1).writeConfig("stop", true);
+		
+		Configurable c = ((Configurable) console);
+		Bus8bit membus = (Bus8bit)c.readConfig("memory");
+		
+		//Configure the filepath and filename using the marker and incrementing the extension number
+		String filepath = SAVE_STATE_PATH;
+		String filenameNoExt = removeExtension(CARTNAME);
+		int nextExtension = getNextExtension(filepath, filenameNoExt, marker);
+		RECORDING_PATH = filepath;
+		RECORDING_FILENAME = filenameNoExt + "." + marker + nextExtension;
+		RECORDING_TEMPNAME = RECORDING_FILENAME + ".recording";
+		
+		//Begin writing to the file
+		try
+		{
+			FILE_RECORDING = new FileOutputStream(RECORDING_PATH + RECORDING_TEMPNAME);
+			OBJECT_RECORDING = new ObjectOutputStream(FILE_RECORDING);
+			
+			c.writeConfig("save", OBJECT_RECORDING);
+			((Configurable)controller1).writeConfig("record", true);
+			
+			// close the file with recording data
+			OBJECT_RECORDING.close();
+			FILE_RECORDING.close();
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		
+	}
+	
+	
+	private void stopRecording() {
+		
+		if(FILE_RECORDING==null)
+			return;
+		
+		try
+		{
+			FILE_RECORDING = new FileOutputStream(RECORDING_PATH + RECORDING_TEMPNAME, true);
+			OBJECT_RECORDING = new ObjectOutputStream(FILE_RECORDING) {
+				protected void writeStreamHeader() throws IOException {
+					reset();
+				}
+			};
+			
+			//stop recording
+			Configurable c = ((Configurable) console);
+			((Configurable)controller1).writeConfig("stop", true);
+			Queue recordedKeys = (LinkedList)((Configurable)controller1).readConfig("recordedkeys");
+			
+			while(!recordedKeys.isEmpty())
+			{
+				OBJECT_RECORDING.writeShort((short)recordedKeys.remove());
+			}
+			
+			// close the file with recording data
+			//
+			OBJECT_RECORDING.close();
+			FILE_RECORDING.close();
+			
+			// compress the file
+			compressGzipFile(RECORDING_PATH + RECORDING_TEMPNAME, RECORDING_PATH + RECORDING_FILENAME);
+			
+			System.out.printf("Recording saved at " + RECORDING_PATH + RECORDING_FILENAME);
+			
+			// delete the temporary file
+			File file = new File(RECORDING_PATH + RECORDING_TEMPNAME);
+			file.delete();
+			
+			// disable recording
+			FILE_RECORDING = null;
+			OBJECT_RECORDING = null;
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	public void loadrecording()
+	{
+		loadrecording("r");
+	}
+	
+	
+	public void loadrecording(String marker)
+	{
+		// find the previous recording
+		String filepath = SAVE_STATE_PATH;
+		String filenameNoExt = removeExtension(CARTNAME);
+		int nextExtension = getNextExtension(filepath, filenameNoExt, marker) - 1;
+		String filename = filenameNoExt + "." + marker + nextExtension;
+		
+		// load the previous recording
+		loadrecording(filepath, filename); 
+	}
+	
+	private void loadrecording(String filepath, String filename) 
+	{
+		stopRecording();
+		((Configurable)controller1).writeConfig("stop", true);
+		
+		Configurable c = ((Configurable) console);
+		
+		String tempFile = filename + ".temp";
+		System.out.println("Loading Save State: " + filename);
+		try
+		{
+			decompressGzipFile( filepath + filename, filepath + tempFile);
+			
+			FileInputStream fileIn = new FileInputStream(filepath + tempFile);
+			ObjectInputStream in = new ObjectInputStream(fileIn);
+			
+			c.writeConfig("load", in);
+			((Configurable)controller1).writeConfig("replay", in);
+			
+			in.close();
+			fileIn.close();
+		
+			File file = new File(filepath + tempFile);
+			file.delete();
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	private void loadRecording() {
+		
+	}
+	
+	
+	
 	public void savestate()
+	{
+		savestate("j");
+	}
+	public void savestate(String marker)
 	{
 		Configurable c = ((Configurable) console);
 		Bus8bit membus = (Bus8bit)c.readConfig("memory");
 		
-	
 		String filepath = SAVE_STATE_PATH;
 		String filenameNoExt = removeExtension(CARTNAME);
-		int nextExtension = getNextExtension(filepath, filenameNoExt, "j");
-		String filename = filenameNoExt + ".j" + nextExtension;
+		int nextExtension = getNextExtension(filepath, filenameNoExt, marker);
+		String filename = filenameNoExt + "." + marker + nextExtension;
 		String tempFile = filename + ".temp";
 		
 		try
@@ -522,6 +752,52 @@ public class SnesSystem implements Hardware
 			e.printStackTrace();
 		}
 	}
+	
+	
+	public void loadstate()
+	{
+		loadstate("j");
+	}
+	
+	
+	public void loadstate(String marker)
+	{
+		String filepath = SAVE_STATE_PATH;
+		String filenameNoExt = removeExtension(CARTNAME);
+		int nextExtension = getNextExtension(filepath, filenameNoExt, marker) - 1;
+		String filename = filenameNoExt + "." + marker + nextExtension;
+		
+	    loadstate(filepath, filename); 
+	}
+	
+	
+	public void loadstate(String filepath, String filename)
+	{
+		Configurable c = ((Configurable) console);
+		
+		String tempFile = filename + ".temp";
+		System.out.println("Loading Save State: " + filename);
+		try
+		{
+			decompressGzipFile( filepath + filename, filepath + tempFile);
+			
+			FileInputStream fileIn = new FileInputStream(filepath + tempFile);
+			ObjectInputStream in = new ObjectInputStream(fileIn);
+			
+			c.writeConfig("load", in);
+			
+			in.close();
+			fileIn.close();
+		
+			File file = new File(filepath + tempFile);
+			file.delete();
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
 	
 	/*
 	 * Used for numbering an extension from j0 to jN, where N can be infinite.
@@ -562,43 +838,6 @@ public class SnesSystem implements Hardware
 	public String removeExtension(String filepath)
 	{
 		return filepath.substring(0, filepath.lastIndexOf("."));
-	}
-	
-	public void loadstate()
-	{
-		String filepath = SAVE_STATE_PATH;
-		String filenameNoExt = removeExtension(CARTNAME);
-		int nextExtension = getNextExtension(filepath, filenameNoExt, "j") - 1;
-		String filename = filenameNoExt + ".j" + nextExtension;
-		
-	    loadstate(filepath, filename); 
-	}
-	
-	public void loadstate(String filepath, String filename)
-	{
-		Configurable c = ((Configurable) console);
-		
-		String tempFile = filename + ".temp";
-		System.out.println("Loading Save State: " + filename);
-		try
-		{
-			decompressGzipFile( filepath + filename, filepath + tempFile);
-			
-			FileInputStream fileIn = new FileInputStream(filepath + tempFile);
-			ObjectInputStream in = new ObjectInputStream(fileIn);
-			
-			c.writeConfig("load", in);
-			
-			in.close();
-			fileIn.close();
-		
-			File file = new File(filepath + tempFile);
-			file.delete();
-		}
-		catch(Exception e)
-		{
-			e.printStackTrace();
-		}
 	}
 
 	private static void compressGzipFile(String file, String gzipFile) {

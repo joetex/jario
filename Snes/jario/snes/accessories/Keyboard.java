@@ -8,15 +8,21 @@
 package jario.snes.accessories;
 
 import jario.hardware.Bus16bit;
+import jario.hardware.Configurable;
 import jario.hardware.Hardware;
+import jario.snes.system.SnesSystem;
 
 import java.awt.AWTEvent;
 import java.awt.Toolkit;
 import java.awt.event.AWTEventListener;
 import java.awt.event.KeyEvent;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
 
-public class Keyboard implements Hardware, Bus16bit, Serializable
+public class Keyboard implements Hardware, Bus16bit, Serializable, Configurable
 {
 	private static final int Joypad_B = 1 << 0;
 	private static final int Joypad_Y = 1 << 1;
@@ -34,6 +40,12 @@ public class Keyboard implements Hardware, Bus16bit, Serializable
 	private static final int Joypad_LeftRight = Joypad_Left | Joypad_Right;
 	private static final int Joypad_UpDown = Joypad_Up | Joypad_Down;
 
+	
+	public boolean isRecording = false;
+	public boolean isPlayback = false;
+	
+	public Queue recordedKeys;
+	
 	private class Key implements Serializable
 	{
 		public int vkey;
@@ -112,6 +124,18 @@ public class Keyboard implements Hardware, Bus16bit, Serializable
 	public short read16bit(int address)
 	{
 		SetInputState(0, 0, ParseInput(0), 0, 0);
+		if( isRecording )
+		{
+			recordedKeys.add((short)inputButtons[0]);
+		}
+		
+		if( isPlayback && !recordedKeys.isEmpty())
+		{
+			short keys = (short)recordedKeys.remove();
+			return keys;
+		}
+			
+		
 		return (short) inputButtons[0];
 	}
 
@@ -155,5 +179,58 @@ public class Keyboard implements Hardware, Bus16bit, Serializable
 	public void destroy() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public Object readConfig(String key) {
+		// TODO Auto-generated method stub
+		if(key.equals("recordedkeys"))
+		{
+			return recordedKeys;
+		}
+		return null;
+	}
+
+	
+	@Override
+	public void writeConfig(String key, Object value) {
+		// TODO Auto-generated method stub
+		if( key.equals("record") ) 
+		{
+			if( isRecording )
+				return;
+			
+			recordedKeys = new LinkedList();
+			isRecording = true;
+		}
+		else if(key.equals("replay") ) 
+		{
+			if( isPlayback )
+				return;
+			
+			isPlayback = true;
+			recordedKeys = new LinkedList();
+			
+			int count = 0;
+			try
+			{
+				ObjectInputStream inputStream = (ObjectInputStream)value;
+				while(true)
+				{
+					short keys = inputStream.readShort();
+					recordedKeys.add(keys);
+					count++;
+				}
+			}
+			catch(Exception e)
+			{
+				System.out.println("Finished reading " + count + " recorded keys.");
+			}
+		}
+		else if(key.equals("stop"))
+		{
+			isPlayback = false;
+			isRecording = false;
+		}
 	}
 }

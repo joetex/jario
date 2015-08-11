@@ -301,7 +301,7 @@ public class Console implements Hardware, Clockable, Configurable, java.io.Seria
 		if (key.equals("enablevideo")) 
 		{
 			enablevideo = (Boolean) value;
-			((Configurable) cpu).writeConfig("enable", value);
+			((Configurable) cpu).writeConfig("enableppu", value);
 			((Configurable) video).writeConfig("enable", value);
 		}
 		else if (key.equals("done")) done = (Boolean) value;

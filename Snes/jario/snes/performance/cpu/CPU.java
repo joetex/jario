@@ -724,7 +724,7 @@ public class CPU extends CPUCore implements Hardware, Clockable, Bus1bit, Bus8bi
 	protected void step(int clocks)
 	{
 		smp_clock += clocks;
-		if( enableppu )
+		//if( enableppu )
 			ppu.clock(clocks);
 		
 		if (coprocessors != null)
@@ -886,13 +886,13 @@ public class CPU extends CPUCore implements Hardware, Clockable, Bus1bit, Bus8bi
 			// synchronize_ppu();
 			synchronize_coprocessor();
 			
-			if( enableppu )
+			//if( enableppu )
 				video.write32bit(0, counter.vcounter());
 			
 			if (counter.vcounter() == 241)
 			{
 				((Clockable) input_port).clock(0L);
-				if( enableppu )
+				//if( enableppu )
 					((Clockable) video).clock(0L);
 				((VideoPlayer)((Video) video).output).updateFPS();
 			}
