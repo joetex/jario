@@ -94,7 +94,8 @@ public class VideoPlayer implements Hardware, BusDMA, Configurable, java.io.Seri
 		currentTime = System.currentTimeMillis();
 		if (++frames % 20 == 0)
 		{
-			window.setTitle("FPS " + Integer.toString((int) ((20 * 1000.0f) / (currentTime - previousTime))));
+			if( frames % 100 == 0)
+				window.setTitle("FPS " + Integer.toString((int) ((20 * 1000.0f) / (currentTime - previousTime))));
 			previousTime = currentTime;
 		}
 	}

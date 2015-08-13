@@ -28,7 +28,9 @@ public class SMP extends SMPCore implements Hardware, Clockable, Bus8bit, Config
 	protected Clockable dsp_clk;
 	protected Bus8bit dsp_bus;
 	protected Bus8bit cpu_bus;
-
+	
+	private boolean enableaudio = true;
+	
 	public SMP()
 	{
 		t0 = new SMPTimer(192, this);
@@ -504,6 +506,10 @@ public class SMP extends SMPCore implements Hardware, Clockable, Bus8bit, Config
 	public void writeConfig(String key, Object value)
 	{
 		if (key.equals("region")) frequency_multiplier = value.toString().equals("ntsc") ? CPU_FREQUENCY_NTSC : CPU_FREQUENCY_PAL;
+		else if(key.equals("enableaudio"))
+		{
+			enableaudio = (Boolean) value;
+		}
 		else if(key.equals("save")) {
 			ObjectOutputStream out = (ObjectOutputStream)value;
 			
