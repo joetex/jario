@@ -2996,32 +2996,46 @@ public class CPUCore implements CPUCoreInterface, java.io.Serializable
 		opMF(0xff, "read_longx", "sbc");
 	}
 
+	public ArrayList<CPUCoreOperation> regsETable;
+	public ArrayList<CPUCoreOperation> regsPMXTable;
+	public ArrayList<CPUCoreOperation> regsPMOtherTable;
+	public ArrayList<CPUCoreOperation> regsOtherPXTable;
+	public ArrayList<CPUCoreOperation> regsOtherOtherTable;
+	
+	public void createTables()
+	{
+		regsETable = new ArrayList<CPUCoreOperation>(Arrays.asList(op_table).subList(Table_EM, Table_EM + (op_table.length - Table_EM)));
+		regsPMXTable = new ArrayList<CPUCoreOperation>(Arrays.asList(op_table).subList(Table_MX, Table_MX + (op_table.length - Table_MX)));
+		regsPMOtherTable = new ArrayList<CPUCoreOperation>(Arrays.asList(op_table).subList(Table_Mx, Table_Mx + (op_table.length - Table_Mx)));
+		regsOtherPXTable = new ArrayList<CPUCoreOperation>(Arrays.asList(op_table).subList(Table_mX, Table_mX + (op_table.length - Table_mX)));
+		regsOtherOtherTable = new ArrayList<CPUCoreOperation>(Arrays.asList(op_table).subList(Table_mx, Table_mx + (op_table.length - Table_mx)));
+	}
 	protected void update_table()
 	{
 		if (regs.e)
 		{
-			opcode_table = new ArrayList<CPUCoreOperation>(Arrays.asList(op_table).subList(Table_EM, Table_EM + (op_table.length - Table_EM)));
+			opcode_table = regsETable;
 		}
 		else if (regs.p.m)
 		{
 			if (regs.p.x)
 			{
-				opcode_table = new ArrayList<CPUCoreOperation>(Arrays.asList(op_table).subList(Table_MX, Table_MX + (op_table.length - Table_MX)));
+				opcode_table = regsPMXTable;
 			}
 			else
 			{
-				opcode_table = new ArrayList<CPUCoreOperation>(Arrays.asList(op_table).subList(Table_Mx, Table_Mx + (op_table.length - Table_Mx)));
+				opcode_table = regsPMOtherTable;
 			}
 		}
 		else
 		{
 			if (regs.p.x)
 			{
-				opcode_table = new ArrayList<CPUCoreOperation>(Arrays.asList(op_table).subList(Table_mX, Table_mX + (op_table.length - Table_mX)));
+				opcode_table = regsOtherPXTable;
 			}
 			else
 			{
-				opcode_table = new ArrayList<CPUCoreOperation>(Arrays.asList(op_table).subList(Table_mx, Table_mx + (op_table.length - Table_mx)));
+				opcode_table = regsOtherOtherTable;
 			}
 		}
 	}
@@ -3042,6 +3056,7 @@ public class CPUCore implements CPUCoreInterface, java.io.Serializable
 	public CPUCore()
 	{
 		initialize_opcode_table();
+		createTables();
 	}
 
 	@Override

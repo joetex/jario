@@ -10,7 +10,9 @@ package jario.snes.console;
 import jario.hardware.Clockable;
 import jario.hardware.Configurable;
 import jario.hardware.Hardware;
+import jario.snes.accessories.VideoPlayer;
 import jario.snes.configuration.Configuration;
+import jario.snes.video.Video;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -249,6 +251,7 @@ public class Console implements Hardware, Clockable, Configurable, java.io.Seria
 					//if( freeze ) continue;
 					
 					cpu_clk.clock(50000L);
+					((VideoPlayer)((Video) video).output).updateFPS();
 					///clockcnt = 50000L;
 				}
 				System.out.println("Console Clock End");
@@ -285,6 +288,7 @@ public class Console implements Hardware, Clockable, Configurable, java.io.Seria
 	public Object readConfig(String key)
 	{
 		if (key.equals("enablevideo")) return enablevideo;
+		else if (key.equals("enableaudio")) return enablevideo;
 		else if (key.equals("freeze")) return freeze;
 		else if (key.equals("accuracy")) return ((Configurable) ppu).readConfig("accuracy");
 		else if (key.equals("fps")) return ((Configurable) video).readConfig("fps");

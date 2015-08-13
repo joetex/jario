@@ -295,6 +295,7 @@ public class SnesSystem implements Hardware
 				{
 					JCheckBoxMenuItem i = (JCheckBoxMenuItem) evt.getSource();
 					((Configurable) audio).writeConfig("enable", i.isSelected());
+					((Configurable) console).writeConfig("enableaudio",  i.isSelected());
 				}
 			});
 			settingsMenu.add(audioToggle);

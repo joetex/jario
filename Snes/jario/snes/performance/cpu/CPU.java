@@ -618,6 +618,7 @@ public class CPU extends CPUCore implements Hardware, Clockable, Bus1bit, Bus8bi
 		else if (key.equals("enableaudio"))
 		{
 			enableaudio = (Boolean) value;
+			((Configurable) smp).writeConfig(key, value);
 		}
 		else if(key.equals("save")) {
 			ObjectOutputStream out = (ObjectOutputStream)value;
@@ -735,7 +736,7 @@ public class CPU extends CPUCore implements Hardware, Clockable, Bus1bit, Bus8bi
 
 	private void synchronize_smp()
 	{
-		if( enableaudio )
+		//if( enableaudio )
 		{
 			smp.clock(smp_clock);
 			smp_clock = 0;
@@ -882,6 +883,7 @@ public class CPU extends CPUCore implements Hardware, Clockable, Bus1bit, Bus8bi
 	{
 		public void run()
 		{
+			
 			synchronize_smp();
 			// synchronize_ppu();
 			synchronize_coprocessor();
@@ -892,7 +894,7 @@ public class CPU extends CPUCore implements Hardware, Clockable, Bus1bit, Bus8bi
 			if (counter.vcounter() == 241)
 			{
 				((Clockable) input_port).clock(0L);
-				//if( enableppu )
+				if( enableppu )
 					((Clockable) video).clock(0L);
 				((VideoPlayer)((Video) video).output).updateFPS();
 			}

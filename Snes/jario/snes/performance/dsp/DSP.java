@@ -80,16 +80,19 @@ public class DSP implements Hardware, Clockable, Bus8bit, Configurable, java.io.
 	@Override
 	public void clock(long clocks)
 	{
+		if(!enableaudio)
+			return;
+		
 		clock -= clocks;
 		while (clock < 0L)
 		{
 			spc_dsp.run(1);
 			clock += 24L;
-
+			
 			int count = spc_dsp.sample_count();
 			if (count > 0)
 			{
-				if(enableaudio)
+				//if(enableaudio)
 					for (int n = 0; n < count; n += 2)
 					{
 						output.write32bit(0, ((samplebuffer[n + 0] & 0xFFFF) << 16) | (samplebuffer[n + 1] & 0xFFFF));

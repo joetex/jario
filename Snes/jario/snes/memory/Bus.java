@@ -78,18 +78,7 @@ public class Bus implements Bus8bit, java.io.Serializable
 	{
 		addr &= 0x00FFFFFF;
 		Page p = page[addr >> 8];
-		byte result = 0;
-		try
-		{
-			result = p.access.read8bit(p.offset + addr);
-			
-		}
-		catch(Exception e)
-		{
-			System.out.println("NullPointerException");
-			e.printStackTrace();
-		}
-		return result;
+		return p.access.read8bit(p.offset + addr);
 	}
 
 	@Override
