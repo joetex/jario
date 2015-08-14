@@ -112,8 +112,6 @@ public class PPU implements Hardware, Clockable, Bus1bit, Bus8bit, BusDMA, Confi
 	{
 		clock -= clocks;
 		cpuCounter.tick((int) clocks);
-		if(!enablerender)
-			return;
 		while (clock < 0L)
 		{
 			scanline();

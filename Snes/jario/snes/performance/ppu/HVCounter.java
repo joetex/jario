@@ -42,7 +42,7 @@ public class HVCounter implements java.io.Serializable
 		//this.ppu = ppu;
 	}
 
-	final void tick(int clocks)
+	public final void tick(int clocks)
 	{
 		status.hcounter += clocks;
 		if (status.hcounter >= lineclocks())
