@@ -200,6 +200,7 @@ public class Console implements Hardware, Clockable, Configurable, java.io.Seria
 		{
 		case 0:
 			input.connect(0, hw);
+			hw.connect(0, bus);
 			break;
 		case 1:
 			input.connect(1, hw);

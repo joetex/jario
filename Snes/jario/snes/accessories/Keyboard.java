@@ -8,6 +8,7 @@
 package jario.snes.accessories;
 
 import jario.hardware.Bus16bit;
+import jario.hardware.Clockable;
 import jario.hardware.Configurable;
 import jario.hardware.Hardware;
 import jario.snes.system.SnesSystem;
@@ -22,7 +23,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class Keyboard implements Hardware, Bus16bit, Serializable, Configurable
+public class Keyboard implements Hardware, Clockable, Bus16bit, Serializable, Configurable
 {
 	private static final int Joypad_B = 1 << 0;
 	private static final int Joypad_Y = 1 << 1;
@@ -232,5 +233,11 @@ public class Keyboard implements Hardware, Bus16bit, Serializable, Configurable
 			isPlayback = false;
 			isRecording = false;
 		}
+	}
+
+	@Override
+	public void clock(long time) {
+		// TODO Auto-generated method stub
+		
 	}
 }

@@ -8,6 +8,7 @@
 package jario.snes.input;
 
 import jario.hardware.Bus16bit;
+import jario.hardware.Clockable;
 import jario.snes.input.Input.Device;
 
 public class Port implements java.io.Serializable
@@ -16,6 +17,7 @@ public class Port implements java.io.Serializable
 	public int counter0; // read counters
 	public int counter1;
 	
+	public Clockable clockable;
 	public Bus16bit bus;
 
 	public Superscope superscope = new Superscope();

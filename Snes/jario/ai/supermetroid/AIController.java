@@ -3,6 +3,7 @@ package jario.ai.supermetroid;
 
 
 import jario.hardware.Bus16bit;
+import jario.hardware.Clockable;
 import jario.hardware.Configurable;
 import jario.hardware.Hardware;
 import jario.snes.system.SnesSystem;
@@ -17,7 +18,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class InputController implements Hardware, Bus16bit, Serializable, Configurable
+public class AIController implements Hardware, Clockable, Bus16bit, Serializable, Configurable
 {
 	private static final int Joypad_B = 1 << 0;
 	private static final int Joypad_Y = 1 << 1;
@@ -40,6 +41,62 @@ public class InputController implements Hardware, Bus16bit, Serializable, Config
 	public boolean isPlayback = false;
 	
 	public Queue recordedKeys;
+	
+	
+	public AIPlayerInfo playerInfo = null;
+	
+	@Override
+	public void clock(long time) {
+		// TODO Auto-generated method stub
+		int health = playerInfo.getEnergy();
+		//if( health != 0 )
+		//	System.out.println("Health = " + health);
+	}
+	
+	@Override
+	public void connect(int port, Hardware hw)
+	{
+		switch(port)
+		{
+		case 0:
+			playerInfo.connect(port, hw);
+			break;
+		}
+	}
+	
+	
+	
+	private void SetInputState(int port, int index, int buttonStates, int x, int y)
+	{
+		if ((buttonStates & Joypad_LeftRight) == Joypad_LeftRight)
+		{
+			buttonStates &= ~Joypad_LeftRight;
+		}
+
+		if ((buttonStates & Joypad_UpDown) == Joypad_UpDown)
+		{
+			buttonStates &= ~Joypad_UpDown;
+		}
+
+		int i = port * 4 + index;
+		inputButtons[i] = buttonStates;
+	}
+
+	private int ParseInput(int playerIndex)
+	{
+		int snesButtonStates = 0;
+
+		for (int i = 0; i < keys.length; i++)
+		{
+			if ((keyboardState & keys[i].value) != 0)
+			{
+				snesButtonStates |= keys[i].value;
+			}
+		}
+
+		return snesButtonStates;
+	}
+	
 	
 	private class Key implements Serializable
 	{
@@ -82,6 +139,8 @@ public class InputController implements Hardware, Bus16bit, Serializable, Config
 			}
 		}
 	}
+	
+	
 
 	private int keyboardState;
 	private int[] inputButtons = new int[8];
@@ -100,15 +159,14 @@ public class InputController implements Hardware, Bus16bit, Serializable, Config
 			new Key(Joypad_R, KeyEvent.VK_C),
 	};
 
-	public InputController()
+	public AIController()
 	{
 		Toolkit.getDefaultToolkit().addAWTEventListener(new ControllerListener(), AWTEvent.KEY_EVENT_MASK);
+		
+		playerInfo = new AIPlayerInfo();
 	}
 
-	@Override
-	public void connect(int port, Hardware hw)
-	{
-	}
+	
 
 	@Override
 	public void reset()
@@ -139,36 +197,7 @@ public class InputController implements Hardware, Bus16bit, Serializable, Config
 	{
 	}
 
-	private void SetInputState(int port, int index, int buttonStates, int x, int y)
-	{
-		if ((buttonStates & Joypad_LeftRight) == Joypad_LeftRight)
-		{
-			buttonStates &= ~Joypad_LeftRight;
-		}
-
-		if ((buttonStates & Joypad_UpDown) == Joypad_UpDown)
-		{
-			buttonStates &= ~Joypad_UpDown;
-		}
-
-		int i = port * 4 + index;
-		inputButtons[i] = buttonStates;
-	}
-
-	private int ParseInput(int playerIndex)
-	{
-		int snesButtonStates = 0;
-
-		for (int i = 0; i < keys.length; i++)
-		{
-			if ((keyboardState & keys[i].value) != 0)
-			{
-				snesButtonStates |= keys[i].value;
-			}
-		}
-
-		return snesButtonStates;
-	}
+	
 
 	@Override
 	public void destroy() {
@@ -228,5 +257,7 @@ public class InputController implements Hardware, Bus16bit, Serializable, Config
 			isRecording = false;
 		}
 	}
+
+	
 }
 

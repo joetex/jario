@@ -25,10 +25,21 @@ public class Input implements Hardware, Clockable, Bus8bit, java.io.Serializable
 	
 	private Stub stub = new Stub();
 
+	public Clockable controller1;
+	
+	
 	@Override
 	public void connect(int port, Hardware hw)
 	{
 		if (port >= 2) return;
+		
+		switch(port)
+		{
+		case 0:
+			this.port[port].clockable = (Clockable)hw;
+			break;
+		}
+		
 		this.port[port].bus = hw != null ? (Bus16bit) hw : stub;
 		port_set_device(port, Device.Joypad);
 	}
@@ -512,6 +523,11 @@ public class Input implements Hardware, Clockable, Bus8bit, java.io.Serializable
 	@Override
 	public void clock(long clocks)
 	{
+		//for(int i=0; i<port.length; i++)
+		{
+			port[0].clockable.clock(clocks);
+		}
+		
 		// SnesSystem.system.getInterface().input_poll();
 		// Port p = port[1];
 		//

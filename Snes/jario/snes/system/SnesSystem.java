@@ -449,7 +449,11 @@ public class SnesSystem implements Hardware
 	public SnesSystem()
 	{
 		LoadConsole();
-		LoadCartridge("C:\\Users\\Joel\\Documents\\JavaProjects\\roms\\Super Mario World (USA).smc");
+		LoadCartridge("C:\\Users\\Joel\\Documents\\JavaProjects\\roms\\Super Metroid (JU) [!].smc");
+		
+		freeze();
+		loadstate();
+		unfreeze();
 	}
 	
 	public void LoadConsole()
