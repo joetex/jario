@@ -1391,10 +1391,10 @@ public class PPU implements Hardware, Clockable, Bus1bit, Bus8bit, BusDMA, Confi
 			return;
 		}
 		screen.scanline();
-		bg1.render();
-		bg2.render();
-		bg3.render();
-		bg4.render();
+		bg1.render(); //MAP TILES
+		bg2.render(); //SROLLING BACKGROUND
+		bg3.render(); //ATMOSPHERE
+		bg4.render(); //UNKNOWN
 		sprite.render();
 		screen.render();
 	}

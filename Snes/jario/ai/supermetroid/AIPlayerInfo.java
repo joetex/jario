@@ -1,8 +1,10 @@
 package jario.ai.supermetroid;
 
+import jario.ai.utils.BusExtras;
 import jario.ai.utils.Vector2D;
 import jario.hardware.Bus8bit;
 import jario.hardware.Hardware;
+import java.util.ArrayList;
 
 public class AIPlayerInfo implements Hardware {
 	
@@ -13,10 +15,6 @@ public class AIPlayerInfo implements Hardware {
 		
 	}
 	
-	public void dumpRam()
-	{
-		
-	}
 	public int getRoomTime()
 	{
 		return 0;
@@ -157,7 +155,8 @@ public class AIPlayerInfo implements Hardware {
 		int y = memorybus.read8bit(0x7E0B32);
 		return new Vector2D(x,y);
 	}
-
+	
+	
 	@Override
 	public void connect(int port, Hardware hw) 
 	{

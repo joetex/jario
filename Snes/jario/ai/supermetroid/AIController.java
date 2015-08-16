@@ -3,6 +3,7 @@ package jario.ai.supermetroid;
 
 
 import jario.hardware.Bus16bit;
+import jario.hardware.Bus8bit;
 import jario.hardware.Clockable;
 import jario.hardware.Configurable;
 import jario.hardware.Hardware;
@@ -42,13 +43,67 @@ public class AIController implements Hardware, Clockable, Bus16bit, Serializable
 	
 	public Queue recordedKeys;
 	
+	public static Bus8bit memorybus;
 	
 	public AIPlayerInfo playerInfo = null;
 	
+	public int clockcnt=0;
 	@Override
 	public void clock(long time) {
 		// TODO Auto-generated method stub
 		int health = playerInfo.getEnergy();
+		
+		//TileInfo[][] tiles = TileInfo.getTileMap2D();
+		//int width = tiles.length;
+		clockcnt++;
+		if( clockcnt > 100 )
+		{
+			
+			/*
+			int prevData = 0;
+			
+			for(int i=0x7E0000; i<0x7FFFFF; i++)
+			{
+				int data = memorybus.read8bit(i) & 0xFF;
+				if( data == 0x0D && prevData == 0x99 )
+				{
+					System.out.println("Found Door$00 - 0x990D at : " + (i-1));
+				}
+				
+				if( data == 0xF8 && prevData == 0x91 )
+				{
+					System.out.println("Found Door$01 - 0x91F8 at : " + (i-1));
+				}
+				
+				if( data == 0xE2 && prevData == 0x98 )
+				{
+					System.out.println("Found Door$02 - 0x98E2 at : " + (i-1));
+				}
+				
+				if( data == 0x79 && prevData == 0x98 )
+				{
+					System.out.println("Found Door$03 - 0x9879 at : " + (i-1));
+				}
+				
+				if( data == 0xBA && prevData == 0x96 )
+				{
+					System.out.println("Found Door$04 - 0x96BA at : " + (i-1));
+				}
+				
+				if( data == 0xD5 && prevData == 0x93 )
+				{
+					System.out.println("Found Door$05 - 0x93D5 at : " + (i-1));
+				}
+				
+				if( data == 0x44 && prevData == 0x9A )
+				{
+					System.out.println("Found Door$06 - 0x9A44 at : " + (i-1));
+				}
+				prevData = data;
+			}*/
+		}
+		
+		//int height = tiles[0].length;
 		//if( health != 0 )
 		//	System.out.println("Health = " + health);
 	}
@@ -60,6 +115,7 @@ public class AIController implements Hardware, Clockable, Bus16bit, Serializable
 		{
 		case 0:
 			playerInfo.connect(port, hw);
+			memorybus = (Bus8bit)hw;
 			break;
 		}
 	}

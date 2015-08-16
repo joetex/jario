@@ -893,13 +893,15 @@ public class CPU extends CPUCore implements Hardware, Clockable, Bus1bit, Bus8bi
 			
 			if (counter.vcounter() == 241)
 			{
+				//Send clock signal up to the controller (for AI)
+				((Clockable) input_port).clock(0L);
+				
 				if( enableppu )
 					((Clockable) video).clock(0L);
 				((VideoPlayer)((Video) video).output).updateFPS();
 			}
 		
-			//Send clock signal up to the controller (for AI)
-			((Clockable) input_port).clock(0L);
+			
 			
 
 			if (counter.vcounter() == 0)
