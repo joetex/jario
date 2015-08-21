@@ -10,6 +10,8 @@ public class AIPlayerInfo implements Hardware {
 	
 	public Bus8bit memorybus;
 	
+	RoomInfo roomInfo = null;
+	
 	public AIPlayerInfo()
 	{
 		
@@ -30,17 +32,17 @@ public class AIPlayerInfo implements Hardware {
 	 */
 	public int gameState()
 	{
-		return memorybus.read8bit(0x7E0998);
+		return BusExtras.read16bit(memorybus,0x7E0998);
 	}
 	
 	public int isElevatorTransition()
 	{
-		return memorybus.read8bit(0x7E0E16);
+		return BusExtras.read16bit(memorybus,0x7E0E16);
 	}
 	
 	public int isRoomTransition()
 	{
-		return memorybus.read8bit(0x7E0797);
+		return BusExtras.read16bit(memorybus,0x7E0797);
 	}
 	
 	public Vector2D roomBlockSize()
@@ -52,78 +54,89 @@ public class AIPlayerInfo implements Hardware {
 	
 	public int getRoomID()
 	{
-		return memorybus.read8bit(0x7E079D);
+		return BusExtras.read16bit(memorybus,0x7E079D);
 	}
 	
 	public int getRegionNumber()
 	{
-		return memorybus.read8bit(0x7E079F);
+		return BusExtras.read16bit(memorybus,0x7E079F);
 	}
 	
-	public int getRoomEnemyCount()
-	{
-		return memorybus.read8bit(0x7E0E4E);
-	}
 	
-	public int getRoomEnemiesKilled()
-	{
-		return memorybus.read8bit(0x7E0E50);
-	}
-	
-	public int getRoomKillsNeeded()
-	{
-		return memorybus.read8bit(0x7E0E52);
-	}
 	
 	public int getEnergy() 
 	{
-		return memorybus.read8bit(0x7E09C2);
+		return BusExtras.read16bit(memorybus,0x7E09C2);
 	}
 	
 	public int getMissleCount() 
 	{
-		return memorybus.read8bit(0x7E09C6);
+		return BusExtras.read16bit(memorybus,0x7E09C6);
 	}
 	
 	public int getSuperMissleCount() 
 	{
-		return memorybus.read8bit(0x7E09CA);
+		return BusExtras.read16bit(memorybus,0x7E09CA);
 	}
 	
 	public int getPowerBombCount() 
 	{
-		return memorybus.read8bit(0x7E09CE);
+		return BusExtras.read16bit(memorybus,0x7E09CE);
 	}
 	
 	public int getBombCount()
 	{
-		return memorybus.read8bit(0x7E0CD2);
+		return BusExtras.read16bit(memorybus,0x7E0CD2);
 	}
 	
 	public int getSelectedItem()
 	{
-		return memorybus.read8bit(0x7E09D2);
+		return BusExtras.read16bit(memorybus,0x7E09D2);
 	}
 	
 	public int getCurrentMode() 
 	{
-		return memorybus.read8bit(0x7E09A2);
+		return BusExtras.read16bit(memorybus,0x7E09A2);
 	}
 	
 	public int getCurrentSuit()
 	{
-		return memorybus.read8bit(0x7E09A2);
+		return BusExtras.read16bit(memorybus,0x7E09A2);
 	}
 	
 	public int getCurrentWeapon() 
 	{
-		return memorybus.read8bit(0x7E09A6);
+		return BusExtras.read16bit(memorybus,0x7E09A6);
+	}
+	
+	
+	//7E:0DC4 - 7E:0DC5    Current block index (nth block of the room)
+	public int getCurrentBlockIndex()
+	{
+		return BusExtras.read16bit(memorybus,0x7E0DC4);
+	}
+	
+	//7E:0DC6 - 7E:0DC7    
+	//Unknown, something to do with collisions (direction?) 
+	//0 = jumping up?, 1 = ground, 2 = moving down, 4 = hit head, 5 = walljump. Top byte is related but used seperately
+	public int getMovementCollisionType()
+	{
+		return BusExtras.read16bit(memorybus,0x7E0DC6);
 	}
 	
 	public Vector2D getPosition() 
 	{
-		int x = memorybus.read8bit(0x7E0AF8);
-		int y = memorybus.read8bit(0x7E0AFC);
+		int x = BusExtras.read16bit(memorybus, 0x7E0AF6);
+		int y = BusExtras.read16bit(memorybus, 0x7E0AFA);
+		return new Vector2D(x,y);
+	}
+	
+	//7E:0AFE - 7E:0AFF    Samus's X radius
+	//7E:0B00 - 7E:0B01    Samus's Y radius
+	public Vector2D getSize() 
+	{
+		int x = BusExtras.read16bit(memorybus, 0x7E0AFE);
+		int y = BusExtras.read16bit(memorybus, 0x7E0B00);
 		return new Vector2D(x,y);
 	}
 	
@@ -154,6 +167,16 @@ public class AIPlayerInfo implements Hardware {
 		int x = memorybus.read8bit(0x7E0B48);
 		int y = memorybus.read8bit(0x7E0B32);
 		return new Vector2D(x,y);
+	}
+	
+	
+	
+	
+	public void loadRoom()
+	{
+		roomInfo = new RoomInfo();
+		roomInfo.loadRoom();
+		
 	}
 	
 	

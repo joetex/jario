@@ -12,6 +12,7 @@ import jario.hardware.Clockable;
 import jario.hardware.Configurable;
 import jario.hardware.Hardware;
 import jario.snes.console.Console;
+import jario.snes.debug.DebugWindow;
 import jario.snes.performance.ppu.Cache;
 
 import java.awt.Canvas;
@@ -61,7 +62,14 @@ public class SnesSystem implements Hardware
 	private Map<String, Hardware> controllers = new HashMap<String, Hardware>();
 	private Hardware console;
 	private Hardware cartridge;
+	
+	
+	private JFrame aiwindow = null;
+	private Canvas aicanvas = null;
+	
 
+	public static DebugWindow debugwindow = null;
+	
 	@SuppressWarnings("serial")
 	private class Jario64MenuBar extends JMenuBar
 	{
@@ -287,6 +295,24 @@ public class SnesSystem implements Hardware
 			JMenu settingsMenu = new JMenu();
 			settingsMenu.setText("Settings");
 
+			debugwindow = new DebugWindow();
+			debugwindow.setPreferredSize(new java.awt.Dimension(512, 512));
+			debugwindow.pack();
+			JCheckBoxMenuItem chkDebugWindow = new JCheckBoxMenuItem("Debug Window");
+			chkDebugWindow.setState(false);
+			chkDebugWindow.addActionListener(new ActionListener()
+			{
+				public void actionPerformed(ActionEvent evt)
+				{
+					JCheckBoxMenuItem i = (JCheckBoxMenuItem) evt.getSource();
+				
+					debugwindow.enabled = i.isSelected();
+					debugwindow.setVisible(i.isSelected());
+				}
+			});
+			settingsMenu.add(chkDebugWindow);
+			
+			
 			JCheckBoxMenuItem audioToggle = new JCheckBoxMenuItem("Enable Audio");
 			audioToggle.setState((Boolean) ((Configurable) audio).readConfig("enable"));
 			audioToggle.addActionListener(new ActionListener()
@@ -527,6 +553,19 @@ public class SnesSystem implements Hardware
 		window.getContentPane().add(canvas);
 		window.pack();
 		window.setVisible(true);
+		
+		aiwindow = new JFrame("Super Jario ES");
+		//window2.addWindowListener(winListener);
+		//window2.setJMenuBar(new Jario64MenuBar());
+		aicanvas = new Canvas();
+		aicanvas.setPreferredSize(new java.awt.Dimension(512, 512));
+		aiwindow.getContentPane().add(aicanvas);
+		aiwindow.pack();
+		//aiwindow.setVisible(true);
+		
+		
+		
+		((Configurable) controller1).writeConfig("window", aiwindow);
 
 		((Configurable) video).writeConfig("window", window);
 

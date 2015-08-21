@@ -3,9 +3,15 @@ package jario.ai.supermetroid;
 import java.util.ArrayList;
 
 import jario.ai.utils.BusExtras;
+import jario.ai.utils.Vector2D;
 
 public class TileInfo 
 {
+	public BlockType ttype;
+	public Orientation torientation;
+	public int bts;
+	public Vector2D pos;
+	
 	public enum BlockType
 	{
 		AirXRay,		Slope,		AirFoolXRay,		Treadmill,
@@ -23,10 +29,6 @@ public class TileInfo
 	public enum Orientation { RightDown,	LeftDown,	RightUp,	LeftUp }
 	private static Orientation[] orientationvalues = Orientation.values();
 	
-	public BlockType ttype;
-	public Orientation torientation;
-	public int bts;
-	
 	public void setType(int typeid)
 	{
 		ttype = blockvalues[typeid];
@@ -42,23 +44,6 @@ public class TileInfo
 		bts = btsid;
 	}
 	
-	//7F:0000 - 7F:0001    Size of room tilemap in bytes (and size of background tilemap, and 2x size of bts map)
-	public static int getRoomSize()
-	{
-		return BusExtras.read16bit(AIController.memorybus, 0x7F0000);
-	}
-	
-	//7E:07A5 - 7E:07A6    Current room's width in blocks
-	public static int getRoomBlockWidth()
-	{
-		return BusExtras.read16bit(AIController.memorybus, 0x7E07A5);
-	}
-	
-	//7E:07A7 - 7E:07A8    Current room's height in blocks
-	public static int getRoomBlockHeight()
-	{
-		return BusExtras.read16bit(AIController.memorybus, 0x7E07A7);
-	}
 	
 	//tiledata format (16 bits):
 	// TTTTYXZZ ZZZZZZZZ
@@ -66,14 +51,12 @@ public class TileInfo
 	// Y = vertical flip
 	// X = horizontal flip
 	// Z = tile index (we don't need the graphics, so ignore)
-	public static ArrayList getRoomTileMap()
+	public static ArrayList getRoomTileMap(int roomsize)
 	{
-		ArrayList tilemap = new ArrayList();
-		int roomsize = getRoomSize();
-		
+		ArrayList<TileInfo> tilemap = new ArrayList<TileInfo>();
 		TileInfo binfo;
 		
-		for(int i=0; i<roomsize/2; i++)
+		for(int i=0; i<roomsize; i++)
 		{
 			//7F:0002 - 7F:6401		Room Tilemap
 			int tiledata = BusExtras.read16bit(AIController.memorybus, 0x7F0002 + (i*2)) & 0xFFFF;
@@ -87,19 +70,21 @@ public class TileInfo
 			//(2 bits)
 			binfo.setOrientation((tiledata >> 10) & 0x3);
 			
+			tilemap.add(binfo);
+		}
+		
+		for(int i=0; i<roomsize; i++)
+		{
 			//7F:6402 - 7F:9601     Room BTS map
 			//(8 bits each)
-			binfo.setBTS((AIController.memorybus.read8bit(0x7F6402 + (i)) & 0xFF));
-			
-			tilemap.add(binfo);
+			tilemap.get(i).setBTS((AIController.memorybus.read8bit(0x7F6402 + (i)) & 0xFF));
 		}
 		return tilemap;
 	}
 	
-	public static TileInfo[][] getTileMap2D()
+	public static TileInfo[][] getTileMap2D(int roomWidth, int roomHeight)
 	{
-		int roomWidth = getRoomBlockWidth();
-		int roomHeight = getRoomBlockHeight();
+		
 		
 		TileInfo[][] tiles = new TileInfo[roomWidth][];
 		for(int x=0; x<roomWidth; x++)
@@ -107,13 +92,14 @@ public class TileInfo
 			tiles[x] = new TileInfo[roomHeight];
 		}
 		
-		ArrayList tilemap = getRoomTileMap();
+		ArrayList tilemap = getRoomTileMap(roomWidth*roomHeight);
 		
 		for(int posid=0; posid<tilemap.size(); posid++)
 		{
 			int x = posid % roomWidth;
 			int y = posid / roomWidth;
 			tiles[x][y] = (TileInfo)tilemap.get(posid);
+			tiles[x][y].pos = new Vector2D(x,y);
 		}
 		
 		tilemap.clear();

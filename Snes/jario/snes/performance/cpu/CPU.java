@@ -20,6 +20,7 @@ import jario.hardware.Configurable;
 import jario.hardware.Hardware;
 import jario.snes.accessories.VideoPlayer;
 import jario.snes.performance.cpu.PriorityQueue.Callback;
+import jario.snes.system.SnesSystem;
 import jario.snes.video.Video;
 
 public class CPU extends CPUCore implements Hardware, Clockable, Bus1bit, Bus8bit, Configurable, java.io.Serializable
@@ -899,6 +900,7 @@ public class CPU extends CPUCore implements Hardware, Clockable, Bus1bit, Bus8bi
 				if( enableppu )
 					((Clockable) video).clock(0L);
 				((VideoPlayer)((Video) video).output).updateFPS();
+				SnesSystem.debugwindow.update();
 			}
 		
 			

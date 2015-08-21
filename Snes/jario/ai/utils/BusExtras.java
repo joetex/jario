@@ -12,4 +12,13 @@ public class BusExtras
 		int result = ((h<<8) | l);
 		return (result & 0xFFFF);
 	}
+	
+	public static void write16bit(Bus8bit bus, int address, int value)
+	{
+		byte low = (byte)(value & 0xFF);
+		byte high = (byte)((value & 0xFF00) >> 8);
+		
+		bus.write8bit(address, low);
+		bus.write8bit(address+1, high);
+	}
 }

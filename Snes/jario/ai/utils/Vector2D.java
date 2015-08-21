@@ -2,15 +2,15 @@ package jario.ai.utils;
 
 public class Vector2D 
 {
-	public float x;
-	public float y;
+	public int x;
+	public int y;
 	
 	public Vector2D() {
 		x=0;
 		y=0;
 	}
 	
-	public Vector2D(float x, float y)
+	public Vector2D(int x, int y)
 	{
 		this.x = x;
 		this.y = y;
@@ -18,8 +18,8 @@ public class Vector2D
 	
 	public void Multiply(float scale)
 	{
-		x*=scale;
-		y*=scale;
+		x=(int)((float)x*scale);
+		y=(int)((float)y*scale);
 	}
 	
 	public float SqrLength()
@@ -36,13 +36,13 @@ public class Vector2D
 	public Vector2D Normalized()
 	{
 		float len = this.Length();
-		return new Vector2D(x/len, y/len);
+		return new Vector2D((int)((float)x/len), (int)((float)y/len));
 	}
 	
 	public void Normalize()
 	{
 		float len = this.Length();
-		x/=len;
-		y/=len;
+		x=(int)((float)x/len);
+		y=(int)((float)y/len);
 	}
 }
