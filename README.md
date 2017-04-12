@@ -17,6 +17,6 @@ SuperJarioES+ adds the following new features:
 
 - Super Metroid AI (incomplete) 
 
- - --World is rebuilt using tiles (was hoping to use this for Machine Learning AI to know where walls are located)
+ - --World is rebuilt using tiles (was hoping to use this for Machine Learning AI to know where walls/pathing)
  - --Game specific memory manipulation functions (health, missles, positions, velocity, etc)
 
