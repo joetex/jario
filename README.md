@@ -5,7 +5,7 @@ Original can be found at: https://code.google.com/p/jario/
 
 SuperJarioES+ adds the following new features:
 
-- Fast Forward / Slow-mo
+- Fast Forward (with options to disable Audio/Video for about 1000fps for use in AI) 
 
 - Save State / Load State
 
