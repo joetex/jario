@@ -15,6 +15,8 @@ SuperJarioES+ adds the following new features:
 
 - Debugging Memory Tools (watch memory values)
 
+- AI System to manage controller input, read memory, control game speed (to perform generations faster) 
+
 - Super Metroid AI (incomplete) 
 
  - --World is rebuilt using tiles (was hoping to use this for Machine Learning AI to know about walls/pathing)
